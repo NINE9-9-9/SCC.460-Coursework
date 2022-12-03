@@ -9,7 +9,7 @@ import pandas as pd
 import nltk
 import sklearn
 from nltk.stem.snowball import SnowballStemmer
-from scipy.io import savemat
+from scipy.io import savemat, loadmat
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -45,7 +45,7 @@ def data_extract():
     df.to_csv("description.csv", index=False, encoding="utf_8_sig")
 
 
-data_extract()
+# data_extract()
 #
 df1 = pd.read_csv("description.csv")
 
@@ -89,33 +89,35 @@ def tokenize_only(text):
 
 #
 
-totalvocab_stemmed = []
-totalvocab_tokenized = []
-for i in df1["New_Description"]:
-    allwords_stemmed = tokenize_and_stem(i)  # for each item in 'synopses', tokenize/stem
-    totalvocab_stemmed.extend(allwords_stemmed)  # extend the 'totalvocab_stemmed' list
-    allwords_tokenized = tokenize_only(i)
-    totalvocab_tokenized.extend(allwords_tokenized)
-vocab_frame = pd.DataFrame({'words': totalvocab_tokenized}, index=totalvocab_stemmed)
-print('there are ' + str(vocab_frame.shape[0]) + ' items in vocab_frame')
-vocab_frame.to_csv("vocab_frame.csv", index=True)
+# totalvocab_stemmed = []
+# totalvocab_tokenized = []
+# for i in df1["New_Description"]:
+#     allwords_stemmed = tokenize_and_stem(i)  # for each item in 'synopses', tokenize/stem
+#     totalvocab_stemmed.extend(allwords_stemmed)  # extend the 'totalvocab_stemmed' list
+#     allwords_tokenized = tokenize_only(i)
+#     totalvocab_tokenized.extend(allwords_tokenized)
+# vocab_frame = pd.DataFrame({'words': totalvocab_tokenized}, index=totalvocab_stemmed)
+# print('there are ' + str(vocab_frame.shape[0]) + ' items in vocab_frame')
+# vocab_frame.to_csv("vocab_frame.csv", index=True)
 #
 vocab_frame = pd.read_csv("vocab_frame.csv", index_col=0)
 print(vocab_frame.shape)
 print(vocab_frame.columns)
 totalvocab_stemmed = vocab_frame.index.tolist()
 totalvocab_tokenized = vocab_frame["words"].tolist()
-
+#
 tfidf_vectorizer = TfidfVectorizer(max_df=0.7, max_features=200000,
                                    stop_words=stopwords,
                                    use_idf=True, tokenizer=tokenize_and_stem, ngram_range=(1, 3))
-
+#
 tfidf_matrix = tfidf_vectorizer.fit_transform(df1["New_Description"])
 tfidf_standardized = StandardScaler(with_mean=False).fit(tfidf_matrix)
 
 save_dict = {'name': 'matrix', 'data': tfidf_standardized}
 savemat('test.mat', save_dict)
 
+
+# tfidf_standardized = loadmat('test.mat')
 print(tfidf_matrix.shape)
 #
 #
@@ -135,7 +137,7 @@ lda = LatentDirichletAllocation(
     learning_method='online',
     learning_offset=50,
     random_state=0)
-lda.fit_transform(tfidf_standardized)
+lda.fit(tfidf_matrix)
 joblib.dump(lda, 'lda.pkl')
 
 
