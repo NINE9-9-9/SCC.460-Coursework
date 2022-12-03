@@ -63,9 +63,6 @@ stemmer = SnowballStemmer("english")
 print(stopwords[:5])
 
 
-# # here I define a tokenizer and stemmer which returns the set of stems in the text that it is passed
-
-
 def tokenize_and_stem(text):
     # first tokenize by sentence, then by word to ensure that punctuation is caught as it's own token
     tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
