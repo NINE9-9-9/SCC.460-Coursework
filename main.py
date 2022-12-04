@@ -1,7 +1,10 @@
 import re
 from collections import OrderedDict
-import numpy as np
 
+import pyLDAvis as pyLDAvis
+from tqdm import tqdm
+import numpy as np
+import wordcloud
 import gensim
 from gensim.utils import simple_preprocess
 from gensim.parsing.preprocessing import STOPWORDS
@@ -58,6 +61,7 @@ stopwords.append("use")
 stopwords.append("grants")
 stopwords.append("grant")
 stopwords.append("costs")
+stopwords.append("fund")
 stopwords.append("programme")
 stemmer = SnowballStemmer("english")
 print(stopwords[:5])
@@ -113,9 +117,8 @@ tfidf_vectorizer = TfidfVectorizer(max_df=0.7, max_features=200000,
 tfidf_matrix = tfidf_vectorizer.fit_transform(df1["New_Description"])
 tfidf_standardized = StandardScaler(with_mean=False).fit(tfidf_matrix)
 
-save_dict = {'name': 'matrix', 'data': tfidf_standardized}
-savemat('test.mat', save_dict)
-
+# save_dict = {'name': 'matrix', 'data': tfidf_standardized}
+# savemat('test.mat', save_dict)
 
 # tfidf_standardized = loadmat('test.mat')
 print(tfidf_matrix.shape)
@@ -136,10 +139,11 @@ lda = LatentDirichletAllocation(
     max_iter=50,
     learning_method='online',
     learning_offset=50,
-    random_state=0)
-lda.fit(tfidf_matrix)
-joblib.dump(lda, 'lda.pkl')
-
+    random_state=0, verbose=1,
+    n_jobs=-1)
+lda.fit(tfidf_standardized)
+# joblib.dump(lda, 'lda.pkl')
+joblib.dump(lda, 'lda2.pkl')
 
 # #
 # # km = joblib.load('doc_cluster.pkl')
@@ -167,3 +171,10 @@ def print_top_words(model, feature_names, n_top_words):
 
 
 print_top_words(lda, terms, 6)
+
+# pyLDAvis.enable_notebook()
+pic = pyLDAvis.sklearn.prepare(lda, tfidf_matrix, tfidf_vectorizer)
+pyLDAvis.save_html(pic, 'lda_pass' + str(50) + '.html')
+pyLDAvis.show(pic)
+
+w = wordcloud.WordCloud()
