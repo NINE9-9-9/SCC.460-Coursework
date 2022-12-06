@@ -56,6 +56,7 @@ stopwords = nltk.corpus.stopwords.words('english')
 stopwords.append("project")
 stopwords.append("community")
 stopwords.append("groups")
+stopwords.append("group")
 stopwords.append("funding")
 stopwords.append("use")
 stopwords.append("grants")
@@ -63,6 +64,7 @@ stopwords.append("grant")
 stopwords.append("costs")
 stopwords.append("fund")
 stopwords.append("programme")
+stopwords.append("program")
 stemmer = SnowballStemmer("english")
 print(stopwords[:5])
 
@@ -134,20 +136,27 @@ num_clusters = 50
 # clusters = km.labels_.tolist()
 # joblib.dump(km, 'doc_cluster.pkl')
 #
-lda = LatentDirichletAllocation(
-    n_components=num_clusters,
-    max_iter=50,
-    learning_method='online',
-    learning_offset=50,
-    random_state=0, verbose=1,
-    n_jobs=-1)
-lda.fit(tfidf_standardized)
+# lda = LatentDirichletAllocation(
+#     n_components=num_clusters,
+#     max_iter=50,
+#     learning_method='online',
+#     learning_offset=50,
+#     random_state=0, verbose=1,
+#     n_jobs=-1)
+
+# lda.get_feature_names_out()
+# lda.fit(tfidf_standardized)
 # joblib.dump(lda, 'lda.pkl')
-joblib.dump(lda, 'lda2.pkl')
+# joblib.dump(lda, 'lda2.pkl')
+lda = joblib.load('lda.pkl')
+cluster = lda.components_
+print(lda.get_feature_names_out())
+
 
 # #
-# # km = joblib.load('doc_cluster.pkl')
-# # clusters = km.labels_.tolist()
+km = joblib.load('doc_cluster.pkl')
+clusters = km.labels_.tolist()
+print(len(clusters))
 #
 #
 # df1["cluster"] = clusters
@@ -166,15 +175,18 @@ joblib.dump(lda, 'lda2.pkl')
 def print_top_words(model, feature_names, n_top_words):
     for topic_idx, topic in enumerate(model.components_):
         print("Topic #%d:" % topic_idx)
-        print(" ".join([feature_names[i] for i in topic.argsort()[:-n_top_words - 1:-1]]))
-    print()
+        for i in topic.argsort()[:-n_top_words - 1:-1]:
+            print('%s' % vocab_frame.loc[feature_names[i].split(' ')].values.tolist()[0][0],
+                  end=' ')
+        print()
 
 
 print_top_words(lda, terms, 6)
 
 # pyLDAvis.enable_notebook()
-pic = pyLDAvis.sklearn.prepare(lda, tfidf_matrix, tfidf_vectorizer)
-pyLDAvis.save_html(pic, 'lda_pass' + str(50) + '.html')
-pyLDAvis.show(pic)
-
-w = wordcloud.WordCloud()
+# pic = pyLDAvis.sklearn.prepare(lda, tfidf_matrix, tfidf_vectorizer)
+# pyLDAvis.save_html(pic, 'lda_pass' + str(50) + '.html')
+# pyLDAvis.show(pic)
+#
+# w = wordcloud.WordCloud()
+topic = [""]
